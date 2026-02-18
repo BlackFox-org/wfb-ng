@@ -536,7 +536,7 @@ void Aggregator::dump_stats(void)
 }
 
 
-void Aggregator::log_rssi(const sockaddr_in *sockaddr, uint8_t wlan_idx, const uint8_t *ant, const int8_t *rssi, const int8_t *noise,
+void Aggregator::log_rssi(const sockaddr_in *sockaddr, uint8_t wlan_idx, const uint8_t *ant, const int8_t *rssi, const int8_t *noise, const uint16_t *lock_quality,
                           uint16_t freq, uint8_t mcs_index, uint8_t bandwidth)
 {
     for(int i = 0; i < RX_ANT_MAX && ant[i] != 0xff; i++)
