@@ -210,19 +210,27 @@ class AntennaStat(Int32StringReceiver):
                 lpad = ''
                 rpad = ''
 
-            addstr_markup(window, 2, 20, '{Freq MCS BW %s[ANT]%s pkt/s dloss}     {RSSI} [dBm]        {SNR} [dB]' % (lpad, rpad))
-            for y, (((freq, mcs_index, bandwidth), ant_id), v) in enumerate(sorted(stats_d.items()), 3):
+            addstr_markup(window, 2, 20, '{Freq MCS BW %s[ANT]%s pkt/s dloss}     {RSSI} [dBm]        {SNR} [dB]        {LQ} [val]' % (lpad, rpad))
+           for y, (((freq, mcs_index, bandwidth), ant_id), v) in enumerate(sorted(stats_d.items()), 3):
+            if len(v) == 10:
+                pkt_s, rssi_min, rssi_avg, rssi_max, snr_min, snr_avg, snr_max, lq_min, lq_avg, lq_max = v
+            elif len(v) == 7:
                 pkt_s, rssi_min, rssi_avg, rssi_max, snr_min, snr_avg, snr_max = v
-                if y < ymax:
-                    active_tx = ((ant_id >> 8) == tx_wlan)
-                    diff_loss = max(p['uniq'][0] - pkt_s, 0)
-                    addstr_markup(window, y, 20, '%04d %3d %2d %s%s%s  %4d  %s%4d%s  %3d < {%3d} < %3d  %3d < {%3d} < %3d' % \
-                           (freq, mcs_index, bandwidth,
-                            '{' if active_tx else '', format_ant(ant_id), '}' if active_tx else '',
-                            1000 * pkt_s // self.log_interval,
-                            '{' if diff_loss else '', 1000 * diff_loss // self.log_interval, '}' if diff_loss else '',
-                            rssi_min, rssi_avg, rssi_max,
-                            snr_min, snr_avg, snr_max), 0 if active_tx else curses.A_DIM)
+                lq_min, lq_avg, lq_max = 0, 0, 0
+            else:
+                continue
+
+            if y < ymax:
+                active_tx = ((ant_id >> 8) == tx_wlan)
+                diff_loss = max(p['uniq'][0] - pkt_s, 0)
+                addstr_markup(window, y, 20, '%04d %3d %2d %s%s%s  %4d  %s%4d%s  %3d < {%3d} < %3d  %3d < {%3d} < %3d  %3d < {%3d} < %3d' % \
+                       (freq, mcs_index, bandwidth,
+                        '{' if active_tx else '', format_ant(ant_id), '}' if active_tx else '',
+                        1000 * pkt_s // self.log_interval,
+                        '{' if diff_loss else '', 1000 * diff_loss // self.log_interval, '}' if diff_loss else '',
+                        rssi_min, rssi_avg, rssi_max,
+                        snr_min, snr_avg, snr_max,
+                        lq_min, lq_avg, lq_max), 0 if active_tx else curses.A_DIM)
         else:
             addstr_noerr(window, 2, 20, '[No data]', curses.A_REVERSE)
 
