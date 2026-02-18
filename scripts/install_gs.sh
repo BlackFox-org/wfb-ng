@@ -3,7 +3,7 @@ set -e
 
 nics="$*"
 auto_nics=0
-release=evm
+release=master
 
 if [ $(id -u) != "0" ]
 then
@@ -53,7 +53,7 @@ trap err_handler ERR
        libgstrtspserver-1.0-dev socat git libcatch2-dev
 
     tmpdir="$(mktemp -d)"
-    git clone -b $release --depth 1 https://github.com/BlackFox-org/wfb-ng.git "$tmpdir"
+    git clone -b $release --depth 1 https://github.com/svpcom/wfb-ng.git "$tmpdir"
 
     (cd "$tmpdir" && make deb CFLAGS="-march=native" && apt -y install ./deb_dist/*.deb)
     rm -rf "$tmpdir"
@@ -73,7 +73,7 @@ fi
 # Setup config
 cat <<EOF > /etc/wifibroadcast.cfg
 [common]
-wifi_channel = 161     # 165 -- radio channel @5825 MHz, range: 5815-5835 MHz, width 20MHz
+wifi_channel = 165     # 165 -- radio channel @5825 MHz, range: 5815-5835 MHz, width 20MHz
                        # 1 -- radio channel @2412 Mhz,
                        # see https://en.wikipedia.org/wiki/List_of_WLAN_channels for reference
 wifi_region = 'BO'     # Your country for CRDA (use BO or GY if you want max tx power)
