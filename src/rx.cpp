@@ -508,7 +508,7 @@ void Aggregator::dump_stats(void)
     for(auto it = antenna_stat.begin(); it != antenna_stat.end(); it++)
     {
         // Changed: added tab delimited column for LQ metrics to fix parser crash
-        IPC_MSG("%" PRIu64 "\tRX_ANT\t%u:%u:%u\t%" PRIx64 "\t%d" ":%d:%d:%d" ":%d:%d:%d" "\t%d:%d:%d\n",
+        IPC_MSG("%" PRIu64 "\tRX_ANT\t%u:%u:%u\t%" PRIx64 "\t%d" ":%d:%d:%d" ":%d:%d:%d" ":%d:%d:%d\n",
                 ts, it->first.freq, it->first.mcs_index, it->first.bandwidth, it->first.antenna_id, it->second.count_all,
                 it->second.rssi_min, it->second.rssi_sum / it->second.count_all, it->second.rssi_max,
                 it->second.snr_min, it->second.snr_sum / it->second.count_all, it->second.snr_max,
