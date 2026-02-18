@@ -30,6 +30,7 @@
 #include <set>
 #include <string.h>
 #include <stdexcept>
+#include <algorithm> // Added for std::min/max
 
 #include "wifibroadcast.hpp"
 #include "zfex.h"
@@ -53,7 +54,8 @@ class BaseAggregator
 public:
     virtual ~BaseAggregator(){}
     virtual void process_packet(const uint8_t *buf, size_t size, uint8_t wlan_idx, const uint8_t *antenna,
-                                const int8_t *rssi, const int8_t *noise, uint16_t freq, uint8_t mcs_index,
+                                const int8_t *rssi, const int8_t *noise, const uint16_t *lock_quality, 
+                                uint16_t freq, uint8_t mcs_index,
                                 uint8_t bandwidth, sockaddr_in *sockaddr) = 0;
 
     virtual void dump_stats(void) = 0;
@@ -66,7 +68,8 @@ public:
     Forwarder(const std::string &client_addr, int client_port, int snd_buf_size);
     virtual ~Forwarder();
     virtual void process_packet(const uint8_t *buf, size_t size, uint8_t wlan_idx, const uint8_t *antenna,
-                                const int8_t *rssi, const int8_t *noise, uint16_t freq, uint8_t mcs_index,
+                                const int8_t *rssi, const int8_t *noise, const uint16_t *lock_quality, 
+                                uint16_t freq, uint8_t mcs_index,
                                 uint8_t bandwidth,sockaddr_in *sockaddr);
     virtual void dump_stats(void) {}
 private:
@@ -96,9 +99,10 @@ class rxAntennaItem
 public:
     rxAntennaItem(void) : count_all(0),
                           rssi_sum(0), rssi_min(0), rssi_max(0),
-                          snr_sum(0), snr_min(0), snr_max(0) {}
+                          snr_sum(0), snr_min(0), snr_max(0),
+                          lq_sum(0), lq_min(0), lq_max(0) {}
 
-    void log_rssi(int8_t rssi, int8_t noise){
+    void log_rssi(int8_t rssi, int8_t noise, uint16_t lq){
         int8_t snr = (noise != SCHAR_MAX) ? rssi - noise : 0;
 
         if(count_all == 0){
@@ -106,14 +110,19 @@ public:
             rssi_max = rssi;
             snr_min = snr;
             snr_max = snr;
+            lq_min = lq;
+            lq_max = lq;
         } else {
             rssi_min = std::min(rssi, rssi_min);
             rssi_max = std::max(rssi, rssi_max);
             snr_min = std::min(snr, snr_min);
             snr_max = std::max(snr, snr_max);
+            lq_min = std::min(lq, lq_min);
+            lq_max = std::max(lq, lq_max);
         }
         rssi_sum += rssi;
         snr_sum += snr;
+        lq_sum += lq;
         count_all += 1;
     }
 
@@ -124,6 +133,11 @@ public:
     int32_t snr_sum;
     int8_t snr_min;
     int8_t snr_max;
+    
+    // Lock Quality fields
+    uint64_t lq_sum;
+    uint16_t lq_min;
+    uint16_t lq_max;
 };
 
 struct rxAntennaKey
@@ -172,7 +186,8 @@ public:
     Aggregator(const std::string &keypair, uint64_t epoch, uint32_t channel_id);
     virtual ~Aggregator();
     virtual void process_packet(const uint8_t *buf, size_t size, uint8_t wlan_idx, const uint8_t *antenna,
-                                const int8_t *rssi, const int8_t *noise, uint16_t freq, uint8_t mcs_index,
+                                const int8_t *rssi, const int8_t *noise, const uint16_t *lock_quality, 
+                                uint16_t freq, uint8_t mcs_index,
                                 uint8_t bandwidth, sockaddr_in *sockaddr);
     virtual void dump_stats(void);
 
@@ -223,7 +238,7 @@ private:
     void send_packet(int ring_idx, int fragment_idx);
     void apply_fec(int ring_idx);
     void log_rssi(const sockaddr_in *sockaddr, uint8_t wlan_idx, const uint8_t *ant, const int8_t *rssi,
-                  const int8_t *noise, uint16_t freq, uint8_t mcs_index, uint8_t bandwidth);
+                  const int8_t *noise, const uint16_t *lock_quality, uint16_t freq, uint8_t mcs_index, uint8_t bandwidth);
     int get_block_ring_idx(uint64_t block_idx);
     int rx_ring_push(void);
     // cppcheck-suppress unusedPrivateFunction
