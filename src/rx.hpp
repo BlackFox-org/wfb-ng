@@ -97,11 +97,13 @@ static inline int modN(int x, int base)
 class rxAntennaItem
 {
 public:
+    // CHANGED: Initialize lq_sum, lq_min, lq_max
     rxAntennaItem(void) : count_all(0),
                           rssi_sum(0), rssi_min(0), rssi_max(0),
                           snr_sum(0), snr_min(0), snr_max(0),
                           lq_sum(0), lq_min(0), lq_max(0) {}
 
+    // CHANGED: Accept uint16_t lq argument
     void log_rssi(int8_t rssi, int8_t noise, uint16_t lq){
         int8_t snr = (noise != SCHAR_MAX) ? rssi - noise : 0;
 
@@ -110,6 +112,7 @@ public:
             rssi_max = rssi;
             snr_min = snr;
             snr_max = snr;
+            // CHANGED: Init LQ stats
             lq_min = lq;
             lq_max = lq;
         } else {
@@ -117,12 +120,13 @@ public:
             rssi_max = std::max(rssi, rssi_max);
             snr_min = std::min(snr, snr_min);
             snr_max = std::max(snr, snr_max);
+            // CHANGED: Track LQ stats
             lq_min = std::min(lq, lq_min);
             lq_max = std::max(lq, lq_max);
         }
         rssi_sum += rssi;
         snr_sum += snr;
-        lq_sum += lq;
+        lq_sum += lq; // CHANGED: Sum LQ
         count_all += 1;
     }
 
@@ -134,7 +138,7 @@ public:
     int8_t snr_min;
     int8_t snr_max;
     
-    // Lock Quality fields
+    // CHANGED: Add LQ member variables
     uint64_t lq_sum;
     uint16_t lq_min;
     uint16_t lq_max;
